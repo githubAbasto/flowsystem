@@ -1,2 +1,3 @@
 # flowsystem
 Hydroponics flow system related stuff
+Mostly ESP32, and some Influx configs...  
