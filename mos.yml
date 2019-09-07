@@ -1,0 +1,48 @@
+author: mongoose-os
+description: A JS-enabled demo Mongoose OS firmware
+# arch: PLATFORM
+version: 1.0
+manifest_version: 2017-05-18
+libs_version: ${mos.version}
+modules_version: ${mos.version}
+mongoose_os_version: ${mos.version}
+
+config_schema:
+  - [mqtt.enable", true]
+  - ["mqtt.server", "mqtt.symlink.se:1883"]
+  - ["mqtt.user", "fredrik:fredrik"]
+  - ["mqtt.pass", "aivUGL6no"]
+  - ["mqtt.cloud_events", true]
+  
+  
+  - ["wifi.ap.enable", false]
+  - ["wifi.sta.enable", true]
+  - ["wifi.sta.ssid", "MajasLoveNet"]
+  - ["wifi.sta.pass", "loveisintheair"]
+
+  - ["i2c.enable", true]
+  - ["rpc.enable", true]
+  - ["mqtt.enable", true]
+
+  - ["i2c.sda_gpio", 12]
+  - ["i2c.scl_gpio", 14]
+
+tags:
+  - js
+
+build_vars:
+
+filesystem:
+  - fs
+
+libs:
+ # - origin: https://github.com/mongoose-os-libs/boards
+ # - origin: https://github.com/mongoose-os-libs/js-demo-bundle
+ - origin:  https://github.com/mongoose-os-libs/mjs
+ - origin:  https://github.com/mongoose-os-libs/dallas-rmt
+ - origin:  https://github.com/mongoose-os-libs/mqtt
+ - origin: https://github.com/mongoose-os-libs/wifi
+ - origin: https://github.com/mongoose-os-libs/rpc-service-config
+ - origin: https://github.com/mongoose-os-libs/rpc-service-fs
+ - origin: https://github.com/mongoose-os-libs/rpc-uart
+ - origin: https://github.com/mongoose-os-libs/bme280
