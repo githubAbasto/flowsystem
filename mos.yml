@@ -9,12 +9,8 @@ mongoose_os_version: ${mos.version}
 
 config_schema:
   - [mqtt.enable", true]
-  - ["mqtt.server", "mqtt.symlink.se:1883"]
-  - ["mqtt.user", "fredrik:fredrik"]
-  - ["mqtt.pass", "aivUGL6no"]
+  - ["mqtt.server", "192.168.0.199:1883"]
   - ["mqtt.cloud_events", true]
-  
-  
   - ["wifi.ap.enable", false]
   - ["wifi.sta.enable", true]
   - ["wifi.sta.ssid", "MajasLoveNet"]
@@ -24,11 +20,18 @@ config_schema:
   - ["rpc.enable", true]
   - ["mqtt.enable", true]
 
-  - ["i2c.sda_gpio", 12]
-  - ["i2c.scl_gpio", 14]
+  - ["i2c.sda_gpio", 14]
+  - ["i2c.scl_gpio", 12]
 
+  - ["site", "o", {hide: true}]
+  - ["site.id", "s",  "sigtuna", {title: "Site name/location"}]
+  - ["site.position", "s", "mitten1", {title: "Electrical cabinette position"}]
+  
 tags:
   - js
+  - c
+sources:
+ - src 
 
 build_vars:
 
@@ -36,10 +39,8 @@ filesystem:
   - fs
 
 libs:
- # - origin: https://github.com/mongoose-os-libs/boards
- # - origin: https://github.com/mongoose-os-libs/js-demo-bundle
  - origin:  https://github.com/mongoose-os-libs/mjs
- - origin:  https://github.com/mongoose-os-libs/dallas-rmt
+ #- origin:  https://github.com/mongoose-os-libs/dallas-rmt
  - origin:  https://github.com/mongoose-os-libs/mqtt
  - origin: https://github.com/mongoose-os-libs/wifi
  - origin: https://github.com/mongoose-os-libs/rpc-service-config

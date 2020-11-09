@@ -5,11 +5,15 @@ load('api_rpc.js');
 load('api_mqtt.js');
 load('api_timer.js');
 load('api_sys.js');
-load('api_dallas_rmt.js');
-load('api_bme280.js')
+//load('api_dallas_rmt.js');
+load('api_bme280.js');
 
+
+let DAC_out = ffi('void write_dac(int , int )');
+let globalLight=0;
 
 let online = false;                               // Connected to the cloud?
+
 let temp; // Global temp
 let returnTemp;
 let hourMinTemp = [99, 100];
@@ -18,75 +22,51 @@ let hourMaxTemp = [-99 , -99];
 hourMaxTemp.length=2
 let time =0;
 
-//let setLED = function(on) {
-//  let level = onhi ? on : !on;
-//  GPIO.write(led, level);
-// print('LED on ->', on);
-//};
 
 GPIO.set_mode(17, GPIO.MODE_OUTPUT);
 //setLED(state.on);
 
-let myDT = DallasRmt.create(16, 0, 1);
+//let myDT = DallasRmt.create(16, 0, 1);
 //myDT.begin();
-print('Heat TempSensors found:', myDT.getDeviceCount());
-myDT.requestTemperatures();
-let returnTempDT = DallasRmt.create(2, 2, 3);
+//print('Heat TempSensors found:', myDT.getDeviceCount());
+//myDT.requestTemperatures();
+//let returnTempDT = DallasRmt.create(2, 2, 3);
 
-print('Return TempSensors found:', returnTempDT.getDeviceCount());
-returnTempDT.requestTemperatures();
-// BME280Data.create();
-//let sensor1 = BME280.createI2C(4);
-//sensor1.readAll();
-//  print('BME sensor read successfull');
-//  print('Temp:',bmeData.temp(),' Humidity:',bme1Data.humid(),' Pressure:',bmeData.press());
+//print('Return TempSensors found:', returnTempDT.getDeviceCount());
+//returnTempDT.requestTemperatures();
+ let bmedata= BME280Data.create();
+let sensor1 = BME280.createI2C(118);
 
 
+let LED =[127,127];     //Default value after power off...
+if( globalLight===1)
+  DAC_out(LED[0], LED[1]);
 
-//Update state every second, and report to cloud if online
-Timer.set(2000, Timer.REPEAT, function() {
-  temp = myDT.getTempCByIndex(0);
-  let returnTemp =myDT.getTempCByIndex(0);
-  
-  if( (hourMinTemp[time]) > (temp) )
-    hourMinTemp[time]=temp;
+//Update state every 30 second, and report to cloud if online
+Timer.set(15000, Timer.REPEAT, function() {
 
-  myDT.requestTemperatures();// start a new conversion
-  returnTempDT.requestTemperatures();
-
-  print('online:', online, 'HighTempSensor:',temp,'ReturnTemp:',returnTempDT, 'time', time);
-  if (online) reportState();
-  
-  if (temp>35) { 
-    GPIO.write(17,1);
-  } else {
-    GPIO.write(17,0);
+  //sensor1.readAll();
+  if( sensor1.readAll(bmedata) ===0) {
+        print('Temp:',bmedata.temp(),' Humidity:',bmedata.humid(),' Pressure:',bmedata.press());
   }
-  if (temp>80) {
-    GPIO.write(4, 1); 
-  } else { 
-    GPIO.write(4.0);
+  else { // something got wrong with the sensor. Try to reconnect
+    bmedata.free(); //Free the bme data object, and re init to make it all be 0
+    bmedata=BME280Data.create();
+    sensor1=BME280.createI2C(118);
   }
+  if (online && bmedata.press!==0 ){ 
+    reportState();
+    GPIO.toggle(17);
+  } 
 }, null) ;
 
 function reportState() {
-    let message = JSON.stringify(temp);
+    
     let sendMQTT = true;
-
-//    let minTemp = Math.min(hourMinTemp);
-    //Math.min
-    //let maxTemp = Math.max(hourMaxTemp);
-  
-    // AWS is handled as plain MQTT since it allows arbitrary topics.
+    let message =JSON.stringify({ temp: bmedata.temp(), humid: bmedata.humid(), press: bmedata.press(), red: LED[0], white: LED[1], globallight: globalLight });
     if (MQTT.isConnected() && sendMQTT) {
-      let topic = Cfg.get('device.id') + '/temp';
-      print('== Publishing to ' + topic + ':', message);
-      MQTT.pub(topic, message, 0 /* QoS */);
-      
-      //let message = JSON.stringify(hourMinTemp[0]);
-      //let topic = Cfg.get('device.id') + '/mintemp';
-      //print('== Publishing to ' + topic + ':', message,'MinTemp:',minTemp);
-      //
+      let topic = Cfg.get('site.id') + '/'+Cfg.get('site.position')+'/environment';
+      print('== Publishing to ' + topic + ':', message);      
       MQTT.pub(topic, message, 0 /* QoS */);
 
     } else if (sendMQTT) {
@@ -95,9 +75,46 @@ function reportState() {
 
 } 
 
+MQTT.sub( Cfg.get('site.id') + '/flowsystem/led', function(conn, topic, msg) {
+  print('Topic:', topic, 'message:', msg);
+  if (msg==='1') {
+    globalLight=1;
+    ///Turn on LEDs
+    DAC_out(LED[0], LED[1]);
+  }
+  if (msg==='0'){
+    globalLight=0;
+    DAC_out(0,0);
+  }
+  print('Globallight=', globalLight);
+  
+}, null);
+
+
+MQTT.sub(Cfg.get('site.id') +'/' + Cfg.get('site.position') + '/intensity', function(conn, topic, msg) {
+  print('Topic:', topic, 'message:', msg);
+  let data = JSON.parse(msg);
+  print('data-red:', data.red, ' Data-white:', data.white);
+  //Store new value for later use
+  LED[0]=data.red;
+  LED[1]=data.white;
+  if (globalLight===1){
+    // RED / White LED intensity 
+    DAC_out(LED[0], LED[1]);
+  }else {
+    DAC_out(0, 0);
+  }  
+
+   
+  
+}, null);
+
+
+
+
 Event.on(Event.CLOUD_CONNECTED, function() {
   online = true;
-//  Shadow.update(0, {ram_total: Sys.total_ram()});
+  GPIO.write(17,0); // LED ON wHen connected to cloud 
 }, null);
 
 Event.on(Event.CLOUD_DISCONNECTED, function() {
