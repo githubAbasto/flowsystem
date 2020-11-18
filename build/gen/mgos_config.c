@@ -1,7 +1,7 @@
 /* clang-format off */
 /*
  * Generated file - do not edit.
- * Command: /mongoose-os/tools/mgos_gen_config.py --c_name=mgos_config --c_global_name=mgos_sys_config --dest_dir=/data/fwbuild-volumes/2.18.0/apps/flowsystem/esp32/build_contexts/build_ctx_093863002/build/gen/ /mongoose-os/src/mgos_debug_udp_config.yaml /mongoose-os/platforms/esp32/src/esp32_sys_config.yaml /data/fwbuild-volumes/2.18.0/apps/flowsystem/esp32/build_contexts/build_ctx_093863002/build/gen/mos_conf_schema.yml
+ * Command: /mongoose-os/tools/mgos_gen_config.py --c_name=mgos_config --c_global_name=mgos_sys_config --dest_dir=/data/fwbuild-volumes/2.18.0/apps/flowsystem/esp32/build_contexts/build_ctx_134387967/build/gen/ /mongoose-os/src/mgos_debug_udp_config.yaml /mongoose-os/platforms/esp32/src/esp32_sys_config.yaml /data/fwbuild-volumes/2.18.0/apps/flowsystem/esp32/build_contexts/build_ctx_134387967/build/gen/mos_conf_schema.yml
  */
 
 #include "mgos_config.h"
@@ -229,8 +229,8 @@ const struct mgos_config mgos_config_defaults = {
   .i2c.enable = 1,
   .i2c.freq = 100000,
   .i2c.debug = 0,
-  .i2c.sda_gpio = 14,
-  .i2c.scl_gpio = 12,
+  .i2c.sda_gpio = 19,
+  .i2c.scl_gpio = 18,
   .i2c1.unit_no = 1,
   .i2c1.enable = 0,
   .i2c1.freq = 100000,

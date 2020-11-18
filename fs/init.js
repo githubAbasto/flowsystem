@@ -22,8 +22,15 @@ let hourMaxTemp = [-99 , -99];
 hourMaxTemp.length=2
 let time =0;
 
+let dout1=4;
+let dout2=16;
 
 GPIO.set_mode(17, GPIO.MODE_OUTPUT);
+
+
+GPIO.setup_output(dout1, 0);
+GPIO.setup_output(dout1, 0);
+
 //setLED(state.on);
 
 //let myDT = DallasRmt.create(16, 0, 1);
@@ -39,8 +46,23 @@ let sensor1 = BME280.createI2C(118);
 
 
 let LED =[127,127];     //Default value after power off...
-if( globalLight===1)
+
+function DACCheck( ledv) {
+  
+  if(ledv[0]===0){
+    GPIO.write(dout1, 1);
+  }else
+    GPIO.write(dout1, 0);
+  if (ledv[1]===0) {
+    GPIO.write(dout2, 1);
+  } else
+    GPIO.write(dout2, 0);
+}
+
+if( globalLight===1) {
+  DACCheck(LED);
   DAC_out(LED[0], LED[1]);
+}
 
 //Update state every 30 second, and report to cloud if online
 Timer.set(15000, Timer.REPEAT, function() {
@@ -79,16 +101,19 @@ MQTT.sub( Cfg.get('site.id') + '/flowsystem/led', function(conn, topic, msg) {
   print('Topic:', topic, 'message:', msg);
   if (msg==='1') {
     globalLight=1;
+    DACCheck(LED);
     ///Turn on LEDs
     DAC_out(LED[0], LED[1]);
   }
   if (msg==='0'){
     globalLight=0;
     DAC_out(0,0);
+    DACCheck([0,0]);
   }
   print('Globallight=', globalLight);
   
 }, null);
+
 
 
 MQTT.sub(Cfg.get('site.id') +'/' + Cfg.get('site.position') + '/intensity', function(conn, topic, msg) {
@@ -99,10 +124,12 @@ MQTT.sub(Cfg.get('site.id') +'/' + Cfg.get('site.position') + '/intensity', func
   LED[0]=data.red;
   LED[1]=data.white;
   if (globalLight===1){
+    DACCheck(LED);
     // RED / White LED intensity 
     DAC_out(LED[0], LED[1]);
   }else {
     DAC_out(0, 0);
+    DACCheck([0,0]);
   }  
 
    
