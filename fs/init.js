@@ -29,7 +29,7 @@ GPIO.set_mode(17, GPIO.MODE_OUTPUT);
 
 
 GPIO.setup_output(dout1, 0);
-GPIO.setup_output(dout1, 0);
+GPIO.setup_output(dout2, 0);
 
 //setLED(state.on);
 
